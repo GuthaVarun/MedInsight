@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from backend.routes.doctors import doctors_bp
 from backend.routes.doctors import doctors_bp
-
+from backend.routes.emergency import emergency_bp
 from backend.routes.hospitals import hospitals_bp
 
 
@@ -20,7 +20,7 @@ def create_app():
 
     app.register_blueprint(hospitals_bp)
     app.register_blueprint(doctors_bp)
-
+    app.register_blueprint(emergency_bp)
     return app
 
 
