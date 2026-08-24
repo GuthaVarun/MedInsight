@@ -1,122 +1,120 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
+import axios from "axios";
+import "./App.css";
+
+const API_BASE = "http://127.0.0.1:5000";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [city, setCity] = useState("");
+  const [rating, setRating] = useState("");
+  const [hospitals, setHospitals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const searchHospitals = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const params = {};
+
+      if (city.trim()) {
+        params.city = city.trim();
+      }
+
+      if (rating) {
+        params.min_rating = rating;
+      }
+
+      const response = await axios.get(`${API_BASE}/api/hospitals`, {
+        params,
+      });
+
+      setHospitals(response.data.hospitals || []);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to connect to the hospital service.");
+      setHospitals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="header">
+        <h1>MedInsight</h1>
+        <p>Find hospitals using location and rating</p>
+      </header>
 
-      <div className="ticks"></div>
+      <main>
+        <section className="search-box">
+          <h2>Hospital Search</h2>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="filters">
+            <input
+              type="text"
+              placeholder="Enter city"
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+            />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            <select
+              value={rating}
+              onChange={(event) => setRating(event.target.value)}
+            >
+              <option value="">Any rating</option>
+              <option value="4">4+ rating</option>
+              <option value="4.5">4.5+ rating</option>
+            </select>
+
+            <button onClick={searchHospitals} disabled={loading}>
+              {loading ? "Searching..." : "Search Hospitals"}
+            </button>
+          </div>
+
+          {error && <p className="error">{error}</p>}
+        </section>
+
+        <section className="results">
+          <h2>Results</h2>
+
+          {!loading && hospitals.length === 0 && !error && (
+            <p>Enter a city and click Search Hospitals.</p>
+          )}
+
+          {hospitals.map((hospital) => (
+            <div className="hospital-card" key={hospital.id}>
+              <h3>{hospital.id}</h3>
+
+              <p>
+                <strong>Location:</strong>{" "}
+                {hospital.city}, {hospital.state}
+              </p>
+
+              <p>
+                <strong>District:</strong> {hospital.district}
+              </p>
+
+              <p>
+                <strong>Rating:</strong> ⭐ {hospital.rating}
+              </p>
+
+              <p>
+                <strong>Reviews:</strong>{" "}
+                {hospital.number_of_reviews}
+              </p>
+
+              <p>
+                <strong>Coordinates:</strong>{" "}
+                {hospital.latitude}, {hospital.longitude}
+              </p>
+            </div>
+          ))}
+        </section>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
